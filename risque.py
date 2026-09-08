@@ -3,6 +3,16 @@ risque.py - logique de détection des risques climatiques
 
 Ce module prend en entrée les prévisions météo d'une zone (meteo.py) et détermine si des risques météorologiques existe,
 selon des seuils configurables
+
+Format attendu en entrée (dict retourné par meteo.get_previsions) :
+{
+    "daily": {
+        "time": ["2026-09-09", "2026-09-10", ...],
+        "temperature_2m_min": [-1.5, 2.0, ...],
+        "temperature_2m_max": [8.0, 10.0, ...],
+        "precipitation_sum": [0.0, 0.0, ...],
+    }
+}
 """
 
 # --- Seuils ---
@@ -13,6 +23,20 @@ SEUIL_PLUIE_MM = 1.0            # en dessous de ce cumul, pas de pluie
 def detecter_risque_gel(previsions: dict) -> list[dict]:
     """
     Parcours les prévisions journalières et retourne la liste des jours à risque de gel
+
+        ENTRÉE :
+        previsions (dict) - format Open-Meteo, doit contenir au minimum :
+            {
+                "daily": {
+                    "time": ["2026-09-09", "2026-09-10", ...],
+                    "temperature_2m_min": [-1.5, 2.0, ...],
+                }
+            }
+ 
+    SORTIE :
+        list[dict] - un dict par jour à risque, ex :
+            [{"date": "2026-09-09", "temp_min": -1.5}, ...]
+        Retourne une liste vide [] si aucun jour à risque.
     """
     daily = previsions.get("daily", {})
     dates = daily.get("time", [])
@@ -27,6 +51,21 @@ def detecter_risque_gel(previsions: dict) -> list[dict]:
 def detecter_risque_secheresse(previsions: dict) -> dict | None :
     """
     Vérifie s'il existe une séquence de SEUIL_SECHERESSE_JOURS jours consécutifs sans pluie
+
+        ENTRÉE :
+        previsions (dict) - format Open-Meteo, doit contenir au minimum :
+            {
+                "daily": {
+                    "time": ["2026-09-09", "2026-09-10", ...],
+                    "precipitation_sum": [0.0, 0.0, ...],
+                }
+            }
+ 
+    SORTIE :
+        dict | None - décrit la première séquence sèche trouvée, ex :
+            {"debut": "2026-09-09", "fin": "2026-09-15", "nb_jours": 7}
+        Retourne None si aucune séquence de SEUIL_SECHERESSE_JOURS jours
+        consécutifs sans pluie n'est trouvée.
     """
     daily = previsions.get("daily", {})
     dates = daily.get("time", [])
@@ -57,6 +96,20 @@ def analyser_zone(nom_zone: str, previsions: dict) -> dict:
     """
     Analayse complète d'une zone : combine gel + sécheresse.
     C'est cette fonction que Main.py apellera.
+
+        ENTRÉE :
+        nom_zone (str) - nom de la zone/ville, ex : "Auch"
+        previsions (dict) — format Open-Meteo (voir detecter_risque_gel
+            et detecter_risque_secheresse pour le détail des champs requis)
+ 
+    SORTIE :
+        dict - prêt à être ajouté au rapport final, ex :
+            {
+                "zone": "Auch",
+                "risque_gel": [{"date": "2026-09-09", "temp_min": -1.5}, ...],
+                "risque_secheresse": {"debut": ..., "fin": ..., "nb_jours": ...} ou None,
+                "alerte": True/False,  # True si gel OU sécheresse détecté
+            }
     """
     risque_gel = detecter_risque_gel(previsions)
     risque_secheresse = detecter_risque_secheresse(previsions)
