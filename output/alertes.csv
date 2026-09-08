@@ -1,0 +1,6 @@
+﻿zone,alerte,erreur,risque_gel_jours,risque_secheresse
+Zone Nord,False,False,,
+Zone Sud-Ouest,True,False,,2026-09-09 -> 2026-09-15 (7 jours)
+Zone Sud-Est,True,False,,2026-09-09 -> 2026-09-15 (7 jours)
+Zone Est,False,False,,
+Zone Centre,True,False,,2026-09-09 -> 2026-09-15 (7 jours)

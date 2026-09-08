@@ -4,7 +4,7 @@ risque.py - logique de détection des risques climatiques
 Ce module prend en entrée les prévisions météo d'une zone (meteo.py) et détermine si des risques météorologiques existe,
 selon des seuils configurables
 
-Format attendu en entrée (dict retourné par meteo.get_previsions) :
+Format attendu en entrée (dict retourné par meteo.get_meteo, ou None si l'appel API a échoué) :
 {
     "daily": {
         "time": ["2026-09-09", "2026-09-10", ...],
@@ -25,22 +25,26 @@ def detecter_risque_gel(previsions: dict) -> list[dict]:
     Parcours les prévisions journalières et retourne la liste des jours à risque de gel
 
         ENTRÉE :
-        previsions (dict) - format Open-Meteo, doit contenir au minimum :
+        previsions (dict | None) - format Open-Meteo, doit contenir au minimum :
             {
                 "daily": {
                     "time": ["2026-09-09", "2026-09-10", ...],
                     "temperature_2m_min": [-1.5, 2.0, ...],
                 }
             }
- 
+            Peut être None si l'appel API a échoué (voir meteo.get_meteo).
+
     SORTIE :
         list[dict] - un dict par jour à risque, ex :
             [{"date": "2026-09-09", "temp_min": -1.5}, ...]
-        Retourne une liste vide [] si aucun jour à risque.
+        Retourne une liste vide [] si aucun jour à risque, ou si previsions est None.
     """
+    if previsions is None:
+        return []
+
     daily = previsions.get("daily", {})
     dates = daily.get("time", [])
-    temps_min = daily.get ("temperature_2m_min", [])
+    temps_min = daily.get("temperature_2m_min", [])
 
     risques = []
     for date, temp_min in zip(dates, temps_min):
@@ -53,28 +57,32 @@ def detecter_risque_secheresse(previsions: dict) -> dict | None :
     Vérifie s'il existe une séquence de SEUIL_SECHERESSE_JOURS jours consécutifs sans pluie
 
         ENTRÉE :
-        previsions (dict) - format Open-Meteo, doit contenir au minimum :
+        previsions (dict | None) - format Open-Meteo, doit contenir au minimum :
             {
                 "daily": {
                     "time": ["2026-09-09", "2026-09-10", ...],
                     "precipitation_sum": [0.0, 0.0, ...],
                 }
             }
- 
+            Peut être None si l'appel API a échoué (voir meteo.get_meteo).
+
     SORTIE :
         dict | None - décrit la première séquence sèche trouvée, ex :
             {"debut": "2026-09-09", "fin": "2026-09-15", "nb_jours": 7}
         Retourne None si aucune séquence de SEUIL_SECHERESSE_JOURS jours
-        consécutifs sans pluie n'est trouvée.
+        consécutifs sans pluie n'est trouvée, ou si previsions est None.
     """
+    if previsions is None:
+        return None
+
     daily = previsions.get("daily", {})
     dates = daily.get("time", [])
-    precipitations = daily.get ("pricipation_sum", [])
+    precipitations = daily.get("precipitation_sum", [])
 
     jours_secs_consecutifs = 0 
     debut_sequence = None
 
-    for date, pluie in zip (dates, precipitations):
+    for date, pluie in zip(dates, precipitations):
         pluie = pluie or 0.0
         if pluie < SEUIL_PLUIE_MM:
             if jours_secs_consecutifs == 0:
@@ -99,9 +107,10 @@ def analyser_zone(nom_zone: str, previsions: dict) -> dict:
 
         ENTRÉE :
         nom_zone (str) - nom de la zone/ville, ex : "Auch"
-        previsions (dict) — format Open-Meteo (voir detecter_risque_gel
+        previsions (dict | None) - format Open-Meteo (voir detecter_risque_gel
             et detecter_risque_secheresse pour le détail des champs requis)
- 
+            Peut être None si l'appel API a échoué (voir meteo.get_meteo).
+
     SORTIE :
         dict - prêt à être ajouté au rapport final, ex :
             {
@@ -109,8 +118,10 @@ def analyser_zone(nom_zone: str, previsions: dict) -> dict:
                 "risque_gel": [{"date": "2026-09-09", "temp_min": -1.5}, ...],
                 "risque_secheresse": {"debut": ..., "fin": ..., "nb_jours": ...} ou None,
                 "alerte": True/False,  # True si gel OU sécheresse détecté
+                "erreur": True/False,  # True si previsions était None (échec API)
             }
     """
+    erreur = previsions is None
     risque_gel = detecter_risque_gel(previsions)
     risque_secheresse = detecter_risque_secheresse(previsions)
 
@@ -119,4 +130,5 @@ def analyser_zone(nom_zone: str, previsions: dict) -> dict:
         "risque_gel": risque_gel,
         "risque_secheresse": risque_secheresse,
         "alerte": bool(risque_gel) or risque_secheresse is not None,
+        "erreur": erreur,
     }
