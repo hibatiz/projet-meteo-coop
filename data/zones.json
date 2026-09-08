@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "nom": "Zone Nord",
+    "departement": "Somme",
+    "ville": "Amiens",
+    "latitude": 49.8941,
+    "longitude": 2.2958
+  },
+  {
+    "id": 2,
+    "nom": "Zone Sud-Ouest",
+    "departement": "Gironde",
+    "ville": "Bordeaux",
+    "latitude": 44.8378,
+    "longitude": -0.5792
+  },
+  {
+    "id": 3,
+    "nom": "Zone Sud-Est",
+    "departement": "Bouches-du-Rhône",
+    "ville": "Marseille",
+    "latitude": 43.2965,
+    "longitude": 5.3698
+  },
+  {
+    "id": 4,
+    "nom": "Zone Est",
+    "departement": "Bas-Rhin",
+    "ville": "Strasbourg",
+    "latitude": 48.5734,
+    "longitude": 7.7521
+  },
+  {
+    "id": 5,
+    "nom": "Zone Centre",
+    "departement": "Indre-et-Loire",
+    "ville": "Tours",
+    "latitude": 47.3941,
+    "longitude": 0.6848
+  }
+]
