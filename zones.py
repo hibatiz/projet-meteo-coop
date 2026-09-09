@@ -57,7 +57,6 @@ def modifier_zone(id_zone, **kwargs):
     return None    
 
 # Ce bloc ne s'exécute que si on lance ce fichier directement (python3 zones.py)
-# Il ne s'exécute PAS si Jenny importe ce fichier depuis main.py
 
 if __name__ == "__main__":
     print("Chargement des zones...")
