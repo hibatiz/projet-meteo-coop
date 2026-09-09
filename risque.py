@@ -48,7 +48,7 @@ def detecter_risque_gel(previsions: dict) -> list[dict]:
 
     risques = []
     for date, temp_min in zip(dates, temps_min):
-        if temp_min is not None and temp_min < SEUIL_GEL_C:
+        if temp_min is not None and temp_min <= SEUIL_GEL_C:
             risques.append({"date": date, "temp_min": temp_min})
     return risques
 
